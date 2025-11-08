@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>17Live 三星彩中獎機率計算器 v17</title>
+<title>17Live 三星彩中獎機率計算器 v17.1</title>
 <style>
 body{background:#0f172a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;margin:0;padding:16px}
 .card{background:#111827cc;padding:14px;border-radius:16px;margin-bottom:12px}
@@ -13,6 +13,10 @@ input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(1
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px}
 .divider{border-top:1px dashed rgba(148,163,184,.4);margin:2px 0}
 .mono{white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace}
+label.switch{display:inline-block;font-size:13px;vertical-align:middle;margin:0;padding:0}
+label.switch input{margin-right:4px;vertical-align:middle}
+#strictWrap{display:inline-block;font-size:13px;margin:0;padding:0}
+#strictWrap input{margin-right:3px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -29,8 +33,8 @@ input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(1
     <button class="btn sec" onclick="setR(0.95)">r=0.95</button>
   </div>
   <div class="row" style="margin-top:8px">
-    <label><input type="checkbox" id="streak" checked> streak penalty</label>
-    <label><input type="checkbox" id="avoidRepeat" checked onchange="toggleStrict()"> 避免重複上一期</label>
+    <label class="switch"><input type="checkbox" id="streak" checked> streak penalty</label>
+    <label class="switch"><input type="checkbox" id="avoidRepeat" checked onchange="toggleStrict()"> 避免重複上一期</label>
     <label id="strictWrap"><input type="checkbox" id="strictRepeat"> 嚴格排除</label>
   </div>
 
@@ -46,7 +50,7 @@ input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(1
   <input id="latest" placeholder="例如：2 5 7">
   <div class="row">
     <button class="btn" onclick="appendLatest()">＋ 加入到歷史</button>
-    <button class="btn sec" onclick="clearAdded()">重置本機新增</button>
+    <button class="btn.sec" onclick="clearAdded()">重置本機新增</button>
   </div>
 </div>
 
@@ -65,16 +69,21 @@ const baseHistory=[
 [7,5,6],[9,10,4],[9,8,1],[5,4,1],[6,9,1],[3,7,10],[10,2,3],[8,9,6],[1,5,9],[4,1,8],
 [6,4,2],[10,8,6],[6,4,8],[4,9,10],[10,5,3],[9,6,1],[6,5,10],[2,4,7]
 ];
-const LS_KEY="extraHist_v17";
+const LS_KEY="extraHist_v171";
 let added=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
-function toggleStrict(){document.getElementById("strictWrap").style.display=document.getElementById("avoidRepeat").checked?"inline-flex":"none";}
+
+function toggleStrict(){
+  document.getElementById("strictWrap").style.display=document.getElementById("avoidRepeat").checked?"inline-block":"none";
+}
 toggleStrict();
+
 function updateStats(){
   const total=baseHistory.length+added.length;
   const latest=(added.length?added[added.length-1]:baseHistory[baseHistory.length-1]).join(" ");
   document.getElementById("stats").innerHTML=`📊 目前共有 ${total} 期（含 ${added.length} 期本機新增）<br>最新一期：${latest}`;
 }
 updateStats();
+
 function appendLatest(){
   const v=document.getElementById("latest").value.trim().split(/\s+/).map(Number);
   if(v.length===3&&v.every(n=>!isNaN(n))){added.push(v);localStorage.setItem(LS_KEY,JSON.stringify(added));updateStats();alert("已加入！");}
