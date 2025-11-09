@@ -3,35 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>17Live 三星彩中獎機率計算器 v17.1</title>
+<title>17Live 三星彩中獎機率計算器 v17.2</title>
 <style>
-body{background:#0f172a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;margin:0;padding:16px}
-.card{background:#111827cc;padding:14px;border-radius:16px;margin-bottom:12px}
-.btn{padding:8px 12px;border-radius:8px;border:0;background:linear-gradient(135deg,#22d3ee,#60a5fa);color:#081018;font-weight:700;cursor:pointer}
-.btn.sec{background:#0b1020;color:#e5e7eb;border:1px solid rgba(148,163,184,.25)}
-input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(148,163,184,.25);background:#0b1020;color:#e5e7eb}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px}
-.divider{border-top:1px dashed rgba(148,163,184,.4);margin:2px 0}
-.mono{white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace}
-label.switch{display:inline-block;font-size:13px;vertical-align:middle;margin:0;padding:0}
-label.switch input{margin-right:4px;vertical-align:middle}
-#strictWrap{display:inline-block;font-size:13px;margin:0;padding:0}
-#strictWrap input{margin-right:3px;vertical-align:middle}
+body{
+  background:#0f172a;
+  color:#e5e7eb;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;
+  margin:0;
+  padding:16px;
+}
+.card{
+  background:#111827cc;
+  padding:14px;
+  border-radius:16px;
+  margin-bottom:12px;
+}
+.btn{
+  padding:8px 12px;
+  border-radius:8px;
+  border:0;
+  background:linear-gradient(135deg,#22d3ee,#60a5fa);
+  color:#081018;
+  font-weight:700;
+  cursor:pointer;
+}
+.btn.sec{
+  background:#0b1020;
+  color:#e5e7eb;
+  border:1px solid rgba(148,163,184,.25);
+}
+input,textarea{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,.25);
+  background:#0b1020;
+  color:#e5e7eb;
+}
+.row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  margin-top:4px;
+}
+.divider{
+  border-top:1px dashed rgba(148,163,184,.4);
+  margin:2px 0;
+}
+.mono{
+  white-space:pre-wrap;
+  font-family:ui-monospace,Consolas,monospace;
+}
+label.switch{
+  display:inline-block;
+  font-size:13px;
+  vertical-align:middle;
+  margin:0;
+  padding:0;
+}
+label.switch input{
+  margin-right:4px;
+  vertical-align:middle;
+}
+#strictWrap{
+  display:inline-block;
+  font-size:13px;
+  margin:0;
+  padding:0;
+}
+#strictWrap input{
+  margin-right:3px;
+  vertical-align:middle;
+}
 </style>
 </head>
 <body>
 <h1>17Live 三星彩中獎機率計算器</h1>
 <div id="stats" style="color:#60a5fa;font-size:13px;line-height:1.4;margin-bottom:8px"></div>
-<div style="color:#94a3b8;font-size:13px;margin-bottom:10px">建議預設：r=0.80、SP 開啟（兼顧第13期命中與整體穩定）</div>
+<div style="color:#94a3b8;font-size:13px;margin-bottom:10px">
+  建議預設：r=0.80、SP 開啟（兼顧第13期命中與整體穩定）
+</div>
 
 <div class="card">
   <label>衰減權重 r</label>
   <div class="row">
     <input id="r" type="number" step="0.01" value="0.8" min="0" max="1" style="max-width:100px">
-    <button class="btn sec" onclick="setR(0.6)">r=0.6</button>
-    <button class="btn sec" onclick="setR(0.8)">r=0.8</button>
-    <button class="btn sec" onclick="setR(0.95)">r=0.95</button>
+    <button class="btn sec" type="button" onclick="setR(0.6)">r=0.6</button>
+    <button class="btn sec" type="button" onclick="setR(0.8)">r=0.8</button>
+    <button class="btn sec" type="button" onclick="setR(0.95)">r=0.95</button>
   </div>
+
   <div class="row" style="margin-top:8px">
     <label class="switch"><input type="checkbox" id="streak" checked> streak penalty</label>
     <label class="switch"><input type="checkbox" id="avoidRepeat" checked onchange="toggleStrict()"> 避免重複上一期</label>
@@ -39,19 +101,26 @@ label.switch input{margin-right:4px;vertical-align:middle}
   </div>
 
   <label style="margin-top:8px">我的下注（三顆一組，每行一組）</label>
-  <textarea id="bets" placeholder="例如：1 4 6\n1 9 2\n4 6 9"></textarea>
+  <textarea id="bets" placeholder="例如：1 4 6&#10;1 9 2&#10;4 6 9"></textarea>
 
   <div class="row" style="margin-top:8px">
-    <button class="btn" onclick="run()">計算中獎機率</button>
+    <button class="btn" type="button" onclick="run()">計算中獎機率</button>
   </div>
 
   <div class="divider" style="margin:10px 0"></div>
   <label>新增最新一期（三顆）</label>
   <input id="latest" placeholder="例如：2 5 7">
   <div class="row">
-    <button class="btn" onclick="appendLatest()">＋ 加入到歷史</button>
-    <button class="btn.sec" onclick="clearAdded()">重置本機新增</button>
+    <button class="btn" type="button" onclick="appendLatest()">＋ 加入到歷史</button>
+    <button class="btn sec" type="button" onclick="clearAdded()">重置本機新增</button>
   </div>
+</div>
+
+<div class="card">
+  <h3>🔥 單號推薦前五（依權重機率排序）</h3>
+  <ul id="singleTop" class="mono" style="padding-left:0;margin:4px 0;list-style:none;font-size:13px;color:#9ca3af">
+    <li>尚未計算，請先按「計算中獎機率」。</li>
+  </ul>
 </div>
 
 <div class="card">
@@ -65,63 +134,159 @@ label.switch input{margin-right:4px;vertical-align:middle}
 </div>
 
 <script>
+// 內建 18 期歷史（含你新增的 2 4 7）
 const baseHistory=[
-[7,5,6],[9,10,4],[9,8,1],[5,4,1],[6,9,1],[3,7,10],[10,2,3],[8,9,6],[1,5,9],[4,1,8],
-[6,4,2],[10,8,6],[6,4,8],[4,9,10],[10,5,3],[9,6,1],[6,5,10],[2,4,7]
+  [7,5,6],[9,10,4],[9,8,1],[5,4,1],[6,9,1],
+  [3,7,10],[10,2,3],[8,9,6],[1,5,9],[4,1,8],
+  [6,4,2],[10,8,6],[6,4,8],[4,9,10],[10,5,3],
+  [9,6,1],[6,5,10],[2,4,7]
 ];
-const LS_KEY="extraHist_v171";
+const LS_KEY="extraHist_v172";
 let added=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
 
 function toggleStrict(){
-  document.getElementById("strictWrap").style.display=document.getElementById("avoidRepeat").checked?"inline-block":"none";
+  document.getElementById("strictWrap").style.display =
+    document.getElementById("avoidRepeat").checked ? "inline-block" : "none";
 }
 toggleStrict();
 
 function updateStats(){
   const total=baseHistory.length+added.length;
   const latest=(added.length?added[added.length-1]:baseHistory[baseHistory.length-1]).join(" ");
-  document.getElementById("stats").innerHTML=`📊 目前共有 ${total} 期（含 ${added.length} 期本機新增）<br>最新一期：${latest}`;
+  document.getElementById("stats").innerHTML =
+    `📊 目前共有 ${total} 期（含 ${added.length} 期本機新增）<br>最新一期：${latest}`;
 }
 updateStats();
 
 function appendLatest(){
   const v=document.getElementById("latest").value.trim().split(/\s+/).map(Number);
-  if(v.length===3&&v.every(n=>!isNaN(n))){added.push(v);localStorage.setItem(LS_KEY,JSON.stringify(added));updateStats();alert("已加入！");}
-  else alert("請輸入三個數字");
+  if(v.length===3 && v.every(n=>!isNaN(n))){
+    added.push(v);
+    localStorage.setItem(LS_KEY,JSON.stringify(added));
+    updateStats();
+    alert("已加入！");
+    document.getElementById("latest").value="";
+  }else{
+    alert("請輸入三個數字");
+  }
 }
-function clearAdded(){if(confirm("確定清除？")){added=[];localStorage.removeItem(LS_KEY);updateStats();}}
-function setR(v){document.getElementById("r").value=v;}
-function getAll(){return baseHistory.concat(added);}
+function clearAdded(){
+  if(confirm("確定清除？")){
+    added=[];
+    localStorage.removeItem(LS_KEY);
+    updateStats();
+  }
+}
+function setR(v){
+  document.getElementById("r").value=v;
+}
+function getAll(){
+  return baseHistory.concat(added);
+}
+
+// 計算單號機率（含 r + SP）
 function singleProbsByR(hist,r,sp){
   const w=Array(10).fill(0),n=hist.length;
-  for(let i=0;i<n;i++){const ww=Math.pow(r,n-1-i);for(const x of hist[i])w[x-1]+=ww;}
-  if(sp){for(let num=1;num<=10;num++){let c=0,m=0,maxc=0,maxm=0;for(let i=0;i<n;i++){if(hist[i].includes(num)){c++;maxc=Math.max(maxc,c);m=0;}else{m++;maxm=Math.max(maxm,m);c=0;}}if(maxc>=3)w[num-1]*=0.7;if(maxm>=3)w[num-1]*=1.2;}}
-  const s=w.reduce((a,b)=>a+b,0);return w.map(v=>v/s);
+  for(let i=0;i<n;i++){
+    const ww=Math.pow(r,n-1-i);
+    for(const x of hist[i]) w[x-1]+=ww;
+  }
+  if(sp){
+    for(let num=1;num<=10;num++){
+      let c=0,m=0,maxc=0,maxm=0;
+      for(let i=0;i<n;i++){
+        if(hist[i].includes(num)){
+          c++;maxc=Math.max(maxc,c);m=0;
+        }else{
+          m++;maxm=Math.max(maxm,m);c=0;
+        }
+      }
+      if(maxc>=3) w[num-1]*=0.7;
+      if(maxm>=3) w[num-1]*=1.2;
+    }
+  }
+  const s=w.reduce((a,b)=>a+b,0);
+  return w.map(v=>v/s);
 }
-function allTrios(){const r=[];for(let i=1;i<=10;i++)for(let j=i+1;j<=10;j++)for(let k=j+1;k<=10;k++)r.push([i,j,k]);return r;}
-function trioProb(p,t){const[a,b,c]=t.map(x=>p[x-1]);const seq=(x,y,z)=>(x*(y/(1-x))*(z/(1-x-y)));return[seq(a,b,c),seq(a,c,b),seq(b,a,c),seq(b,c,a),seq(c,a,b),seq(c,b,a)].reduce((a,b)=>a+b,0);}
+
+function allTrios(){
+  const r=[];
+  for(let i=1;i<=10;i++)
+    for(let j=i+1;j<=10;j++)
+      for(let k=j+1;k<=10;k++)
+        r.push([i,j,k]);
+  return r;
+}
+
+function trioProb(p,t){
+  const[a,b,c]=t.map(x=>p[x-1]);
+  const seq=(x,y,z)=>(x*(y/(1-x))*(z/(1-x-y)));
+  return [
+    seq(a,b,c),seq(a,c,b),
+    seq(b,a,c),seq(b,c,a),
+    seq(c,a,b),seq(c,b,a)
+  ].reduce((x,y)=>x+y,0);
+}
 function fmt(x){return(x*100).toFixed(2)+"%";}
+
+// 更新「單號推薦前五」
+function updateSingleTop(probs){
+  const arr=probs.map((p,idx)=>({num:idx+1,p}));
+  arr.sort((a,b)=>b.p-a.p);
+  const top5=arr.slice(0,5);
+  const ul=document.getElementById("singleTop");
+  if(!ul) return;
+  if(!top5.length){
+    ul.innerHTML = "<li>尚未計算</li>";
+    return;
+  }
+  let html="";
+  top5.forEach((o,i)=>{
+    let color;
+    if(o.p>0.03) color="#38bdf8";
+    else if(o.p>=0.02) color="#e5e7eb";
+    else color="#9ca3af";
+    html += `<li><span style="color:${color}">${i+1}. 號碼 ${o.num} → ${(o.p*100).toFixed(2)}%</span></li>`;
+  });
+  ul.innerHTML=html;
+}
+
 function run(){
-  const hist=getAll(),r=parseFloat(document.getElementById("r").value)||0.8;
+  const hist=getAll();
+  let r=parseFloat(document.getElementById("r").value);
+  if(isNaN(r) || r<=0 || r>=1){
+    r=0.8;
+    document.getElementById("r").value="0.80";
+  }
   const sp=document.getElementById("streak").checked;
   const avoid=document.getElementById("avoidRepeat").checked;
   const strict=document.getElementById("strictRepeat").checked;
-  const p=singleProbsByR(hist,r,sp),tr=allTrios(),last=hist[hist.length-1];
+
+  const p=singleProbsByR(hist,r,sp);
+  // 更新單號前五
+  updateSingleTop(p);
+
+  const tr=allTrios(),last=hist[hist.length-1];
   const scored=[];
   for(const t of tr){
     let sc=trioProb(p,t);
     if(avoid){
       const same=t.filter(x=>last.includes(x)).length;
-      if(strict&&same>=2){sc=0;}
-      else if(!strict&&same>=2){sc*=0.5;}
+      if(strict && same>=2){ sc=0; }
+      else if(!strict && same>=2){ sc*=0.5; }
     }
-    if(sc>0)scored.push({t,sc});
+    if(sc>0) scored.push({t,sc});
   }
   scored.sort((a,b)=>b.sc-a.sc);
   const top=scored.slice(0,10);
-  document.getElementById("toplist").innerHTML=top.map((o,i)=>`<li>${i+1}. ${o.t.join(" ")} → ${fmt(o.sc)}</li>`).join("<div class='divider'></div>");
+  document.getElementById("toplist").innerHTML =
+    top.map((o,i)=>`<li>${i+1}. ${o.t.join(" ")} → ${fmt(o.sc)}</li>`).join("<div class='divider'></div>");
+
   const bets=document.getElementById("bets").value.trim();
-  if(!bets)return;
+  if(!bets){
+    document.getElementById("myres").textContent="尚未輸入下注。";
+    return;
+  }
   const lines=bets.split(/\n+/).map(l=>l.trim()).filter(Boolean);
   const res=[];
   for(const l of lines){
