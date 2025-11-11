@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>17Live 三星彩中獎機率計算器 v18.0</title>
+<title>17Live 三星彩中獎機率計算器 v18.1</title>
 <style>
 body{
   background:#0f172a;
@@ -79,17 +79,14 @@ label.switch input{
   vertical-align:middle;
 }
 
-/* 新增：雙欄網格與小卡片樣式 */
-.grid2{
+/* 左右兩欄容器 */
+.split2{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:6px;
+  gap:8px;
 }
-@media (min-width:640px){
-  .grid2{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
+
+/* 小卡片樣式 */
 .chip{
   background:#1e293b;
   border-radius:12px;
@@ -100,6 +97,7 @@ label.switch input{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  margin-bottom:4px;
 }
 .chip span.label{
   color:#e5e7eb;
@@ -107,15 +105,15 @@ label.switch input{
 .chip span.value{
   font-weight:600;
 }
-.chip.top1{
+.chip.rank1{
   border-color:#38bdf8;
   box-shadow:0 0 0 1px rgba(56,189,248,.4),0 10px 25px rgba(15,23,42,.9);
   background:radial-gradient(circle at top,#0ea5e944,#020617);
 }
-.chip.top1 span.label{
+.chip.rank1 span.label{
   color:#f9fafb;
 }
-.chip.top1 span.value{
+.chip.rank1 span.value{
   color:#7dd3fc;
 }
 
@@ -197,24 +195,24 @@ label.switch input{
   </div>
 </div>
 
-<!-- 各號碼機率分佈：改成雙欄卡片 -->
+<!-- 各號碼機率分佈：Top1-5 左、Top6-10 右 -->
 <div class="card">
-  <h3>🔢 各號碼機率分佈</h3>
+  <h3>🔢 各號碼機率分佈（依權重排序）</h3>
   <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">
     單號平均理論機率：約 10.00%（完全隨機 1/10）
   </div>
-  <div id="singleTop" class="mono grid2" style="margin-top:6px;">
+  <div id="singleTop" class="mono split2" style="margin-top:6px;">
     <div style="grid-column:1 / -1;font-size:13px;color:#9ca3af">尚未計算，請先按「計算中獎機率」。</div>
   </div>
 </div>
 
-<!-- Top10：改成雙欄卡片 -->
+<!-- Top10：Top1-5 左、Top6-10 右 -->
 <div class="card">
   <h3>💡 最新推薦結果（Top1～Top10）</h3>
   <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">
     三號組平均理論機率：約 0.83%（1 / C(10,3) ≈ 1/120）
   </div>
-  <div id="toplist" class="mono grid2" style="margin-top:6px;"></div>
+  <div id="toplist" class="mono split2" style="margin-top:6px;"></div>
 </div>
 
 <div class="card">
@@ -222,7 +220,7 @@ label.switch input{
   <div id="myres" class="mono" style="font-size:13px;color:#94a3b8">尚未計算</div>
 </div>
 
-<!-- 命中紀錄表：改成表格 -->
+<!-- 命中紀錄表 -->
 <div class="card">
   <h3>📈 命中紀錄表（回測：以 TopN 預測下一期）</h3>
   <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">
@@ -263,7 +261,7 @@ const baseHistory=[
   [6,4,2],[10,8,6],[6,4,8],[4,9,10],[10,5,3],
   [9,6,1],[6,5,10],[2,4,7],[1,4,6],[4,6,10]
 ];
-const LS_KEY="extraHist_v180";
+const LS_KEY="extraHist_v181";
 let added=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
 
 function toggleStrict(){
@@ -342,7 +340,7 @@ function trioProb(p,t){
 }
 function fmt(x){return(x*100).toFixed(2)+"%";}
 
-// 單號分佈（含上一期懲罰）
+// 各號機率分佈：排名後左右分欄 Top1-5 / Top6-10
 function updateSingleTop(probs,hist){
   const n=hist.length;
   const last=hist[n-1]||[];
@@ -366,21 +364,43 @@ function updateSingleTop(probs,hist){
     container.innerHTML=`<div style="grid-column:1 / -1;font-size:13px;color:#9ca3af">尚未計算。</div>`;
     return;
   }
-  let html="";
-  arr.forEach((o)=>{
+
+  const left = arr.slice(0,5);
+  const right = arr.slice(5,10);
+
+  let leftHtml="", rightHtml="";
+  left.forEach((o,idx)=>{
     let color="#9ca3af";
     if(o.p>0.03)color="#38bdf8";
     else if(o.p>=0.02)color="#e5e7eb";
-    html+=`
-      <div class="chip">
-        <span class="label">號碼 ${o.num}</span>
+    const rank = idx+1;
+    const cls = rank===1 ? "chip rank1" : "chip";
+    leftHtml+=`
+      <div class="${cls}">
+        <span class="label">#${rank} 號碼 ${o.num}</span>
         <span class="value" style="color:${color}">${(o.p*100).toFixed(2)}%</span>
       </div>`;
   });
-  container.innerHTML=html;
+  right.forEach((o,idx)=>{
+    let color="#9ca3af";
+    if(o.p>0.03)color="#38bdf8";
+    else if(o.p>=0.02)color="#e5e7eb";
+    const rank = idx+6;
+    const cls = rank===1 ? "chip rank1" : "chip"; // rank1 不會在右邊，但寫一下沒關係
+    rightHtml+=`
+      <div class="${cls}">
+        <span class="label">#${rank} 號碼 ${o.num}</span>
+        <span class="value" style="color:${color}">${(o.p*100).toFixed(2)}%</span>
+      </div>`;
+  });
+
+  container.innerHTML = `
+    <div>${leftHtml}</div>
+    <div>${rightHtml}</div>
+  `;
 }
 
-// 組合層計算：套用 熱號懲罰 + 避免重複上一期（平衡版 v17.9）
+// 組合層：平衡懲罰版
 function computeTopCombos(hist,probs,avoid,strict){
   const tri=allTrios();
   const n=hist.length;
@@ -392,13 +412,11 @@ function computeTopCombos(hist,probs,avoid,strict){
     let sc=trioProb(probs,t);
     if(sc<=0)continue;
 
-    // 熱號懲罰（平衡）
     const hotCount=t.filter(x=>hotSet.has(x)).length;
     if(hotCount===1)sc*=0.9;
     else if(hotCount===2)sc*=0.75;
     else if(hotCount===3)sc*=0.6;
 
-    // 避免重複上一期號碼
     if(avoid){
       const sameLast=t.filter(x=>last.includes(x)).length;
       if(strict && sameLast>=2){
@@ -416,17 +434,19 @@ function computeTopCombos(hist,probs,avoid,strict){
   return scored;
 }
 
-// 回測：用每期 TopN 預測下一期
+// 回測：從「第3期」開始，用每期 TopN 預測下一期
 function backtestTopN(hist,r,sp,avoid,strict,topN){
   const n=hist.length;
   const rows=[];
-  if(n<2)return rows;
-  for(let i=0;i<n-1;i++){
+  if(n<3)return rows; // 至少要3期
+
+  for(let i=1;i<n-1;i++){ // i=1 對應 預測第3期，避開最早一期
     const train=hist.slice(0,i+1);
     const target=hist[i+1];
     const probs=singleProbsByR(train,r,sp);
     const scored=computeTopCombos(train,probs,avoid,strict);
     const top=scored.slice(0,topN);
+
     let bestHit=0;
     const hitCombos=[];
     for(const item of top){
@@ -434,6 +454,7 @@ function backtestTopN(hist,r,sp,avoid,strict,topN){
       if(hitCount>0)hitCombos.push({t:item.t,hit:hitCount});
       if(hitCount>bestHit)bestHit=hitCount;
     }
+
     rows.push({
       issue:i+2,
       target,
@@ -445,15 +466,16 @@ function backtestTopN(hist,r,sp,avoid,strict,topN){
   return rows;
 }
 
-// 命中紀錄表顯示（表格）
+// 命中紀錄表（表格）
 function renderHits(rows,topN){
   const summaryDiv=document.getElementById("hitSummary");
   const tbody=document.querySelector("#hitTable tbody");
   if(!rows.length){
-    summaryDiv.textContent="歷史期數不足，無法回測。";
+    summaryDiv.textContent="歷史期數不足，無法回測（至少需要 3 期）。";
     tbody.innerHTML="";
     return;
   }
+
   const recent=rows.slice(-10);
   const total=recent.length;
   let c3=0,c2=0,c1=0,c0=0,any=0;
@@ -465,7 +487,7 @@ function renderHits(rows,topN){
     else c0++;
   }
   summaryDiv.textContent=
-    `最近 ${total} 期（Top${topN} 回測）：至少中 1 顆的期數 ${any} 期，全中 3 顆：${c3} 期，中 2 顆：${c2} 期，中 1 顆：${c1} 期，完全未中：${c0} 期。`;
+    `最近 ${total} 期（Top${topN} 回測，從第3期起）：至少中 1 顆的期數 ${any} 期，全中 3 顆：${c3} 期，中 2 顆：${c2} 期，中 1 顆：${c1} 期，完全未中：${c0} 期。`;
 
   let html="";
   for(const r of recent){
@@ -507,17 +529,32 @@ function run(){
   const scored=computeTopCombos(hist,probs,avoid,strict);
   const top=scored.slice(0,10);
   const topContainer=document.getElementById("toplist");
-  let topHtml="";
-  top.forEach((o,i)=>{
-    const isTop1=i===0;
-    const cls="chip"+(isTop1?" top1":"");
-    topHtml+=`
+
+  const left = top.slice(0,5);
+  const right = top.slice(5,10);
+  let leftHtml="", rightHtml="";
+  left.forEach((o,idx)=>{
+    const rank=idx+1;
+    const cls = rank===1 ? "chip rank1" : "chip";
+    leftHtml+=`
       <div class="${cls}">
-        <span class="label">Top${i+1}｜${o.t.join(" ")}</span>
+        <span class="label">Top${rank}｜${o.t.join(" ")}</span>
         <span class="value">${fmt(o.sc)}</span>
       </div>`;
   });
-  topContainer.innerHTML=topHtml;
+  right.forEach((o,idx)=>{
+    const rank=idx+6;
+    const cls = rank===1 ? "chip rank1" : "chip";
+    rightHtml+=`
+      <div class="${cls}">
+        <span class="label">Top${rank}｜${o.t.join(" ")}</span>
+        <span class="value">${fmt(o.sc)}</span>
+      </div>`;
+  });
+  topContainer.innerHTML=`
+    <div>${leftHtml}</div>
+    <div>${rightHtml}</div>
+  `;
 
   const bets=document.getElementById("bets").value.trim();
   if(!bets){
