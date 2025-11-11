@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>17Live 三星彩中獎機率計算器 v17.5</title>
+<title>17Live 三星彩中獎機率計算器 v17.6</title>
 <style>
 body{background:#0f172a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;margin:0;padding:16px}
 .card{background:#111827cc;padding:14px;border-radius:16px;margin-bottom:12px}
@@ -79,13 +79,23 @@ label.switch input{margin-right:4px;vertical-align:middle}
   <div id="myres" class="mono" style="font-size:13px;color:#94a3b8">尚未計算</div>
 </div>
 
+<div class="card">
+  <h3>📈 命中紀錄表（回測：以 Top3 預測下一期）</h3>
+  <div id="hitSummary" style="font-size:12px;color:#9ca3af;margin-bottom:4px">
+    尚未回測。請先按「計算中獎機率」，系統會依目前設定回測全部歷史，並顯示最近 10 期統計。
+  </div>
+  <div id="hitTable" class="mono" style="font-size:12px;color:#cbd5f5;max-height:260px;overflow:auto;border-top:1px solid rgba(148,163,184,.4);padding-top:4px"></div>
+</div>
+
 <script>
+// 內建 20 期歷史（最後兩期：2 4 7、1 4 6、4 6 10）
 const baseHistory=[
-[7,5,6],[9,10,4],[9,8,1],[5,4,1],[6,9,1],[3,7,10],[10,2,3],
-[8,9,6],[1,5,9],[4,1,8],[6,4,2],[10,8,6],[6,4,8],[4,9,10],
-[10,5,3],[9,6,1],[6,5,10],[2,4,7],[1,4,6]
+  [7,5,6],[9,10,4],[9,8,1],[5,4,1],[6,9,1],
+  [3,7,10],[10,2,3],[8,9,6],[1,5,9],[4,1,8],
+  [6,4,2],[10,8,6],[6,4,8],[4,9,10],[10,5,3],
+  [9,6,1],[6,5,10],[2,4,7],[1,4,6],[4,6,10]
 ];
-const LS_KEY="extraHist_v175";
+const LS_KEY="extraHist_v176";
 let added=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
 
 function toggleStrict(){
@@ -104,7 +114,7 @@ updateStats();
 
 function appendLatest(){
   const v=document.getElementById("latest").value.trim().split(/\s+/).map(Number);
-  if(v.length===3&&v.every(n=>!isNaN(n))){
+  if(v.length===3 && v.every(n=>!isNaN(n))){
     added.push(v);
     localStorage.setItem(LS_KEY,JSON.stringify(added));
     updateStats();
@@ -122,6 +132,7 @@ function clearAdded(){
 function setR(v){document.getElementById("r").value=v;}
 function getAll(){return baseHistory.concat(added);}
 
+// 單號權重（含 r + 熱號連開懲罰）
 function singleProbsByR(hist,r,sp){
   const w=Array(10).fill(0),n=hist.length;
   for(let i=0;i<n;i++){
@@ -163,6 +174,7 @@ function trioProb(p,t){
 }
 function fmt(x){return(x*100).toFixed(2)+"%";}
 
+// 單號分佈（含上一期懲罰）
 function updateSingleTop(probs,hist){
   const n=hist.length;
   const last=hist[n-1]||[];
@@ -176,7 +188,7 @@ function updateSingleTop(probs,hist){
     if(last.includes(num))f*=0.6;
     // 連兩期開過 → 再 ×0.7
     if(prev.includes(num))f*=0.7;
-    // 連三期都開過（極端）→ 再 ×0.85
+    // 連三期都開過 → 再 ×0.85
     if(prev2.includes(num)&&prev.includes(num)&&last.includes(num))f*=0.85;
     weights.push(probs[i]*f);
   }
@@ -193,6 +205,91 @@ function updateSingleTop(probs,hist){
   document.getElementById("singleTop").innerHTML=html;
 }
 
+// 回測：用每期 Top3 預測下一期，產生命中紀錄
+function backtestTop3(hist,r,sp,avoid,strict){
+  const n=hist.length;
+  const rows=[];
+  if(n<2)return rows;
+
+  for(let i=0;i<n-1;i++){
+    const train=hist.slice(0,i+1);     // 用前 i+1 期訓練
+    const target=hist[i+1];            // 預測第 i+2 期
+    const probs=singleProbsByR(train,r,sp);
+    const tri=allTrios();
+    const scored=[];
+    const lastTrain=train[train.length-1];
+
+    for(const t of tri){
+      let sc=trioProb(probs,t);
+      if(avoid){
+        const same=t.filter(x=>lastTrain.includes(x)).length;
+        if(strict&&same>=2){sc=0;}
+        else if(!strict&&same>=2){sc*=0.5;}
+      }
+      if(sc>0)scored.push({t,sc});
+    }
+    scored.sort((a,b)=>b.sc-a.sc);
+    const top3=scored.slice(0,3);
+
+    let bestHit=0;
+    const hitCombos=[];
+    for(const item of top3){
+      const hitCount=item.t.filter(x=>target.includes(x)).length;
+      if(hitCount>0)hitCombos.push({t:item.t,hit:hitCount});
+      if(hitCount>bestHit)bestHit=hitCount;
+    }
+
+    rows.push({
+      issue:i+2,         // 預測的是第 i+2 期
+      target,
+      bestHit,
+      hitCombos,
+      top3
+    });
+  }
+  return rows;
+}
+
+// 將回測結果畫到畫面上
+function renderHits(rows){
+  const summaryDiv=document.getElementById("hitSummary");
+  const tableDiv=document.getElementById("hitTable");
+  if(!rows.length){
+    summaryDiv.textContent="歷史期數不足，無法回測。";
+    tableDiv.textContent="";
+    return;
+  }
+
+  const recent=rows.slice(-10);
+  const total=recent.length;
+  let c3=0,c2=0,c1=0,c0=0,any=0;
+  for(const r of recent){
+    if(r.bestHit>=1)any++;
+    if(r.bestHit===3)c3++;
+    else if(r.bestHit===2)c2++;
+    else if(r.bestHit===1)c1++;
+    else c0++;
+  }
+  summaryDiv.textContent=
+    `最近 ${total} 期回測：至少中 1 顆的期數 ${any} 期，全中 3 顆：${c3} 期，中 2 顆：${c2} 期，中 1 顆：${c1} 期，完全未中：${c0} 期。`;
+
+  // 命中表：只顯示最近 10 期，舊的在上，新在下
+  let html="";
+  for(const r of recent){
+    const issue=`第 ${r.issue} 期`;
+    const targetStr=r.target.join(" ");
+    const hitLabel=(r.bestHit>0)?`${r.bestHit} 顆`:"0 顆";
+    let comboStr="—";
+    if(r.hitCombos.length){
+      const best=r.bestHit;
+      const bestList=r.hitCombos.filter(x=>x.hit===best);
+      comboStr=bestList.map(x=>x.t.join(" ")).join("、");
+    }
+    html+=`${issue}｜開獎：${targetStr}｜最佳命中：${hitLabel}｜命中組合：${comboStr}\n`;
+  }
+  tableDiv.textContent=html.trim();
+}
+
 function run(){
   const hist=getAll();
   let r=parseFloat(document.getElementById("r").value);
@@ -207,7 +304,8 @@ function run(){
   const p=singleProbsByR(hist,r,sp);
   updateSingleTop(p,hist);
 
-  const tr=allTrios(),last=hist[hist.length-1];
+  const tr=allTrios();
+  const last=hist[hist.length-1];
   const scored=[];
   for(const t of tr){
     let sc=trioProb(p,t);
@@ -226,17 +324,21 @@ function run(){
   const bets=document.getElementById("bets").value.trim();
   if(!bets){
     document.getElementById("myres").textContent="尚未輸入下注。";
-    return;
+  }else{
+    const lines=bets.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+    const res=[];
+    for(const l of lines){
+      const trio=l.split(/\s+/).map(Number).filter(n=>!isNaN(n));
+      if(trio.length!==3){res.push(`${l} → 格式錯誤`);continue;}
+      const pz=trioProb(p,trio);
+      res.push(`${trio.join(" ")} → ${fmt(pz)}`);
+    }
+    document.getElementById("myres").textContent=res.join("\n");
   }
-  const lines=bets.split(/\n+/).map(l=>l.trim()).filter(Boolean);
-  const res=[];
-  for(const l of lines){
-    const trio=l.split(/\s+/).map(Number).filter(n=>!isNaN(n));
-    if(trio.length!==3){res.push(`${l} → 格式錯誤`);continue;}
-    const pz=trioProb(p,trio);
-    res.push(`${trio.join(" ")} → ${fmt(pz)}`);
-  }
-  document.getElementById("myres").textContent=res.join("\n");
+
+  // 回測 Top3 → 下一期，並顯示命中紀錄與最近10期統計
+  const rows=backtestTop3(hist,r,sp,avoid,strict);
+  renderHits(rows);
 }
 </script>
 </body>
