@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>17Live 三星彩中獎機率計算器 v17.8</title>
+<title>17Live 三星彩中獎機率計算器 v17.9</title>
 <style>
 body{background:#0f172a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;margin:0;padding:16px}
 .card{background:#111827cc;padding:14px;border-radius:16px;margin-bottom:12px}
@@ -105,7 +105,7 @@ const baseHistory=[
   [6,4,2],[10,8,6],[6,4,8],[4,9,10],[10,5,3],
   [9,6,1],[6,5,10],[2,4,7],[1,4,6],[4,6,10]
 ];
-const LS_KEY="extraHist_v178";
+const LS_KEY="extraHist_v179";
 let added=JSON.parse(localStorage.getItem(LS_KEY)||"[]");
 
 function toggleStrict(){
@@ -215,34 +215,34 @@ function updateSingleTop(probs,hist){
   document.getElementById("singleTop").innerHTML=html;
 }
 
-// 組合層計算：套用 熱號懲罰 + 避免重複上一期
+// 組合層計算：套用 熱號懲罰 + 避免重複上一期（平衡版）
 function computeTopCombos(hist,probs,avoid,strict){
   const tri=allTrios();
   const n=hist.length;
   const last=hist[n-1];
   const prev=hist[n-2]||[];
-  // 熱號定義：最近兩期出現過的號碼
-  const hotSet=new Set([...last,...prev]);
+  const hotSet=new Set([...last,...prev]); // 熱號＝最近兩期出現過
+
   const scored=[];
   for(const t of tri){
     let sc=trioProb(probs,t);
     if(sc<=0)continue;
 
-    // ① 熱號組合懲罰（最近兩期的號碼）
+    // ① 熱號組合懲罰（平衡係數）
     const hotCount=t.filter(x=>hotSet.has(x)).length;
-    if(hotCount===1)sc*=0.8;
-    else if(hotCount===2)sc*=0.5;
-    else if(hotCount===3)sc*=0.3;
+    if(hotCount===1)sc*=0.9;
+    else if(hotCount===2)sc*=0.75;
+    else if(hotCount===3)sc*=0.6;
 
-    // ② 避免重複上一期號碼
+    // ② 避免重複上一期號碼（非嚴格也只是降權）
     if(avoid){
       const sameLast=t.filter(x=>last.includes(x)).length;
       if(strict && sameLast>=2){
         sc=0;
       }else if(!strict){
-        if(sameLast===1)sc*=0.7;
-        else if(sameLast===2)sc*=0.4;
-        else if(sameLast===3)sc=0;
+        if(sameLast===1)sc*=0.85;
+        else if(sameLast===2)sc*=0.7;
+        else if(sameLast===3)sc*=0.5;
       }
     }
 
@@ -259,8 +259,8 @@ function backtestTopN(hist,r,sp,avoid,strict,topN){
   if(n<2)return rows;
 
   for(let i=0;i<n-1;i++){
-    const train=hist.slice(0,i+1);   // 用前 i+1 期訓練
-    const target=hist[i+1];          // 預測第 i+2 期
+    const train=hist.slice(0,i+1);
+    const target=hist[i+1];
     const probs=singleProbsByR(train,r,sp);
     const scored=computeTopCombos(train,probs,avoid,strict);
     const top=scored.slice(0,topN);
