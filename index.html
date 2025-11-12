@@ -473,7 +473,6 @@ function backtestTopN(hist,r,sp,avoid,strict,topN){
   return rows;
 }
 
-<script>
 function getIssueDate(issue){
   // 自動從第 1 期開始推算日期，第 1 期 = 2025/10/22
   const baseDate = new Date(2025, 9, 22); // 月份從 0 開始：9 = 10 月
@@ -536,7 +535,6 @@ function renderHits(rows, topN){
   }
   tbody.innerHTML = html;
 }
-</script>
 
 function run(){
   const hist=getAll();
