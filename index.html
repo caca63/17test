@@ -573,18 +573,21 @@ function run(){
 
   const bets=document.getElementById("bets").value.trim();
   if(!bets){
-    document.getElementById("myres").textContent="尚未輸入下注。";
-  }else{
-    const lines=bets.split(/\n+/).map(l=>l.trim()).filter(Boolean);
-    const res=[];
-    for(const l of lines){
-      const trio=l.split(/\s+/).map(Number).filter(n=>!isNaN(n));
-      if(trio.length!==3){res.push(`${l} → 格式錯誤`);continue;}
-      const pz=trioProb(probs,trio);
-      res.push(`${trio.join(" ")} → ${fmt(pz)}`);
-    }
-    document.getElementById("myres").textContent=res.join("\n");
+  document.getElementById("myres").textContent="尚未輸入下注。";
+}else{
+  const lines=bets.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  const res=[];
+  for(const l of lines){
+    const trio=l.split(/\s+/).map(Number).filter(n=>!isNaN(n));
+    if(trio.length!==3){res.push(`${l} → 格式錯誤`);continue;}
+    const pz=trioProb(probs,trio);
+    const sortedKey=trio.slice().sort((a,b)=>a-b).join(",");
+    const rankIndex=scored.findIndex(x=>x.t.join(",")===sortedKey);
+    const rankText=rankIndex>=0?`（第 ${rankIndex+1} 名／共 120 組）`:"";
+    res.push(`${trio.join(" ")} → ${fmt(pz)} ${rankText}`);
   }
+  document.getElementById("myres").textContent=res.join("\n");
+}
 
   const rows=backtestTopN(hist,r,sp,avoid,strict,topN);
   renderHits(rows,topN);
