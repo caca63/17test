@@ -527,10 +527,10 @@ function renderHits(rows,topN){
     }
     html+=`
       <tr>
-        <td>${issue}</td>
+        <td style="width:90px;white-space:nowrap;">${issue}</td>
         <td>${targetStr}</td>
         <td>${hitLabel}</td>
-        <td>${comboStr}</td>
+        <td style="max-width:280px;word-break:break-all;">${comboStr}</td>
       </tr>`;
   }
   tbody.innerHTML=html;
