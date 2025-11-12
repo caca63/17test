@@ -473,59 +473,59 @@ function backtestTopN(hist,r,sp,avoid,strict,topN){
   return rows;
 }
 
+// 依期數自動生成日期（第 1 期 = 2025/10/22，每期 +1 天）
 function getIssueDate(issue){
-  // 自動從第 1 期開始推算日期，第 1 期 = 2025/10/22
-  const baseDate = new Date(2025, 9, 22); // 月份從 0 開始：9 = 10 月
+  const baseDate = new Date(2025, 9, 22); // 月份從 0 開始，9=10月
   baseDate.setDate(baseDate.getDate() + (issue - 1));
-  const y = baseDate.getFullYear() - 1911; // 轉為民國年
+  const y = baseDate.getFullYear() - 1911; // 轉民國年
   const m = String(baseDate.getMonth() + 1).padStart(2, "0");
   const d = String(baseDate.getDate()).padStart(2, "0");
   return `（${y}/${m}/${d}）`;
 }
 
 // 命中紀錄表（表格，顯示全部或最近30期）
-function renderHits(rows, topN){
-  const summaryDiv = document.getElementById("hitSummary");
-  const tbody = document.querySelector("#hitTable tbody");
+function renderHits(rows,topN){
+  const summaryDiv=document.getElementById("hitSummary");
+  const tbody=document.querySelector("#hitTable tbody");
   if(!rows.length){
-    summaryDiv.textContent = "歷史期數不足，無法回測（至少需要 3 期）。";
-    tbody.innerHTML = "";
+    summaryDiv.textContent="歷史期數不足，無法回測（至少需要 3 期）。";
+    tbody.innerHTML="";
     return;
   }
 
-  const totalAll = rows.length;
-  let displayRows = rows;
-  let remark = "";
-  if(totalAll > 30){
-    displayRows = rows.slice(-30);
-    remark = `共 ${totalAll} 期（顯示最近 30 期）`;
-  } else {
-    remark = `共 ${totalAll} 期（顯示全部）`;
+  const totalAll=rows.length;
+  let displayRows=rows;
+  let remark="";
+  if(totalAll>30){
+    displayRows=rows.slice(-30);
+    remark=`共 ${totalAll} 期（顯示最近 30 期）`;
+  }else{
+    remark=`共 ${totalAll} 期（顯示全部）`;
   }
 
-  let c3 = 0, c2 = 0, c1 = 0, c0 = 0, any = 0;
+  let c3=0,c2=0,c1=0,c0=0,any=0;
   for(const r of displayRows){
-    if(r.bestHit >= 1) any++;
-    if(r.bestHit === 3) c3++;
-    else if(r.bestHit === 2) c2++;
-    else if(r.bestHit === 1) c1++;
+    if(r.bestHit>=1)any++;
+    if(r.bestHit===3)c3++;
+    else if(r.bestHit===2)c2++;
+    else if(r.bestHit===1)c1++;
     else c0++;
   }
-  summaryDiv.textContent =
+  summaryDiv.textContent=
     `${remark}；在這些期數中（Top${topN} 回測）：至少中 1 顆的期數 ${any} 期，全中 3 顆：${c3} 期，中 2 顆：${c2} 期，中 1 顆：${c1} 期，完全未中：${c0} 期。`;
 
-  let html = "";
+  let html="";
   for(const r of displayRows){
-    const issue = `第 ${r.issue} 期 ${getIssueDate(r.issue)}`;  // 🔹加上日期
-    const targetStr = r.target.join(" ");
-    const hitLabel = (r.bestHit > 0) ? `${r.bestHit} 顆` : "0 顆";
-    let comboStr = "—";
+    const issue=`第 ${r.issue} 期 ${getIssueDate(r.issue)}`; // ✅ 顯示日期
+    const targetStr=r.target.join(" ");
+    const hitLabel=(r.bestHit>0)?`${r.bestHit} 顆`:"0 顆";
+    let comboStr="—";
     if(r.hitCombos.length){
-      const best = r.bestHit;
-      const bestList = r.hitCombos.filter(x => x.hit === best);
-      comboStr = bestList.map(x => x.t.join(" ")).join("、");
+      const best=r.bestHit;
+      const bestList=r.hitCombos.filter(x=>x.hit===best);
+      comboStr=bestList.map(x=>x.t.join(" ")).join("、");
     }
-    html += `
+    html+=`
       <tr>
         <td>${issue}</td>
         <td>${targetStr}</td>
@@ -533,7 +533,7 @@ function renderHits(rows, topN){
         <td>${comboStr}</td>
       </tr>`;
   }
-  tbody.innerHTML = html;
+  tbody.innerHTML=html;
 }
 
 function run(){
