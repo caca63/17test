@@ -222,6 +222,13 @@ label.switch input{
   <div id="toplist" class="mono split2" style="margin-top:6px;"></div>
 </div>
 
+  <!-- 各數字累計開出次數 -->
+<div class="card">
+  <h3>📊 各數字累計開出次數（含本機新增）</h3>
+  <div id="countGrid" class="mono split2" style="margin-top:6px;"></div>
+  <div id="countSummary" style="font-size:12px;color:#9ca3af;margin-top:4px"></div>
+</div>
+
 <div class="card">
   <h3>我的下注結果</h3>
   <div id="myres" class="mono" style="font-size:13px;color:#94a3b8">尚未計算</div>
@@ -279,10 +286,15 @@ function toggleStrict(){
 toggleStrict();
 
 function updateStats(){
-  const total=baseHistory.length+added.length;
-  const latest=(added.length?added[added.length-1]:baseHistory[baseHistory.length-1]).join(" ");
-  document.getElementById("stats").innerHTML=
+  const histAll = getAll();
+  const total = histAll.length;
+  const latest = (histAll[total-1] || []).join(" ");
+  document.getElementById("stats").innerHTML =
     `📊 目前共有 ${total} 期（含 ${added.length} 期本機新增）<br>最新一期：${latest}`;
+
+  // ▲ 同步更新：各數字累計開出次數
+  const counts = tallyCounts(histAll);
+  renderCounts(counts, histAll);
 }
 updateStats();
 
@@ -347,6 +359,42 @@ function trioProb(p,t){
   ].reduce((x,y)=>x+y,0);
 }
 function fmt(x){return(x*100).toFixed(2)+"%";}
+  
+// 累計各號碼出現次數
+function tallyCounts(hist){
+  const counts = Array(10).fill(0);
+  for(const draw of hist){
+    for(const x of draw){ counts[x-1]++; }
+  }
+  return counts;
+}
+
+// 渲染「各數字累計開出次數」卡片（左右各 5 個）
+function renderCounts(counts, hist){
+  const totalBalls = hist.length * 3; // 每期三顆
+  const items = counts.map((c,i)=>({num:i+1, c, p: totalBalls? c/totalBalls : 0}));
+
+  const left = items.slice(0,5);
+  const right = items.slice(5,10);
+
+  const chipHtml = (o)=>`
+    <div class="chip">
+      <span class="label">號碼 ${o.num}</span>
+      <span class="value">${o.c} 次｜${(o.p*100).toFixed(1)}%</span>
+    </div>`;
+
+  const leftHtml  = left.map(chipHtml).join("");
+  const rightHtml = right.map(chipHtml).join("");
+
+  const grid = document.getElementById("countGrid");
+  if(grid){
+    grid.innerHTML = `<div>${leftHtml}</div><div>${rightHtml}</div>`;
+  }
+  const sumDiv = document.getElementById("countSummary");
+  if(sumDiv){
+    sumDiv.textContent = `累計 ${hist.length} 期，共 ${totalBalls} 顆次。`;
+  }
+}
 
 // 各號碼機率分佈：排名後左右分欄 Top1-5 / Top6-10
 function updateSingleTop(probs,hist){
