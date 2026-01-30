@@ -519,7 +519,7 @@ function backtestTopN(hist,r,sp,avoid,strict,topN){
 
 // 依期數自動生成日期（第 1 期 = 2026/01/21，每期 +1 天）
 function getIssueDate(issue){
-  const baseDate = new Date(2025, 9, 22); // 月份從 0 開始，9=10月
+  const baseDate = new Date(2026, 1, 21); // 月份從 0 開始，9=10月
   baseDate.setDate(baseDate.getDate() + (issue - 1));
   const y = baseDate.getFullYear() - 1911; // 轉民國年
   const m = String(baseDate.getMonth() + 1).padStart(2, "0");
